@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Franklin';
+  src: url('./Franklin Gothic Light SSi Light.ttf');
+}
+* {
+  box-sizing: border-box;
+  font-family: 'Franklin', sans-serif;
+}
