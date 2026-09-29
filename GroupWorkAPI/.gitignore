@@ -1,3 +1,16 @@
-.vs/ 
-bin/ 
-obj/ 
+# Сборка .NET
+bin/
+obj/
+
+# Персональные настройки Visual Studio и пользователей
+.vs/
+*.user
+*.suo
+*.userosv
+
+# Настройки Rider и VS Code
+.idea/
+.vscode/
+
+# Логи
+*.log
