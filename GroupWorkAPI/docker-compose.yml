@@ -26,11 +26,13 @@ services:
       - ConnectionStrings__DefaultConnection=Host=db;Port=5432;Database=postgres;Username=postgres;Password=rafael
       - DBHOST=db
       - ASPNETCORE_ENVIRONMENT=Development
+      - OpenRouter__ApiKey=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
+      - OpenRouter__Model=stealth/space-bunny-alpha
     depends_on:
       - db
     networks:
       - my-network
-      
+
 volumes:
   pgdata:
 

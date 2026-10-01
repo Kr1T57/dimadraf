@@ -1,10 +1,10 @@
 using GroupWorkAPI.Model;
+using GroupWorkAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<PostgresContext>(options =>
     options.UseLazyLoadingProxies().UseNpgsql(connectionString));
@@ -15,17 +15,20 @@ builder.Services.AddOpenApi();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 
+// Регистрация сервиса ИИ
+builder.Services.AddScoped<AiService>();
+
 var myAllowSpecifirOrigins = "_myAllowSpecifirOrigins";
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(myAllowSpecifirOrigins,
-                        policy =>
-                        {
-                            policy.WithOrigins("http://localhost:5000", "http://localhost:3000")
-                                                .AllowAnyHeader()
-                                                .AllowAnyMethod()
-                                                .AllowAnyOrigin();
-                        });
+    policy =>
+    {
+        policy.WithOrigins("http://localhost:5000", "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowAnyOrigin();
+    });
 });
 
 var app = builder.Build();
@@ -39,13 +42,8 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
-
 app.UseCors(myAllowSpecifirOrigins);
-
 app.UseStaticFiles();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
