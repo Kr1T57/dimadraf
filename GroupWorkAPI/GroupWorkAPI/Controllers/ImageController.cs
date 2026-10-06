@@ -67,7 +67,7 @@ namespace GroupWorkAPI.Controllers
 
         [HttpPost("UpLoadProductImage")]
         [RequestSizeLimit(15_000_000)]
-        public async Task<IActionResult> UpLoadProductImage([FromForm] IFormFile? file, [FromForm] int productId, [FromForm] string? category, [FromForm] string? name)
+        public async Task<IActionResult> UpLoadProductImage(IFormFile? file, [FromForm] int productId, [FromForm] string? category, [FromForm] string? name)
         {
             // Поддерживаем как прямую передачу, так и вложенный объект File
             var formFile = file ?? Request.Form.Files["File"] ?? Request.Form.Files["file"];
@@ -122,7 +122,7 @@ namespace GroupWorkAPI.Controllers
 
         [HttpPost("UpLoadProductVariantImage")]
         [RequestSizeLimit(15_000_000)]
-        public async Task<IActionResult> UpLoadProductVariantImage([FromForm] IFormFile? file, [FromForm] int variantId, [FromForm] string? color, [FromForm] string? size)
+        public async Task<IActionResult> UpLoadProductVariantImage(IFormFile? file, [FromForm] int variantId, [FromForm] string? color, [FromForm] string? size)
         {
             var formFile = file ?? Request.Form.Files["File"] ?? Request.Form.Files["file"];
             if (formFile == null || formFile.Length == 0)
