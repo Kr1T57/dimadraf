@@ -9,40 +9,38 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<PostgresContext>(options =>
     options.UseLazyLoadingProxies().UseNpgsql(connectionString));
 
+// Регистрация сервисов
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
-builder.Services.AddOpenApi();
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Регистрация сервиса ИИ
 builder.Services.AddScoped<AiService>();
 
-var myAllowSpecifirOrigins = "_myAllowSpecifirOrigins";
+var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(myAllowSpecifirOrigins,
-    policy =>
+    options.AddPolicy(myAllowSpecificOrigins, policy =>
     {
-        policy.WithOrigins("http://localhost:5000", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5000")
             .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowAnyOrigin();
+            .AllowAnyMethod();
     });
 });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Pipeline
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.RoutePrefix = string.Empty;
+    });
 }
 
-//app.UseHttpsRedirection();
-app.UseCors(myAllowSpecifirOrigins);
+app.UseCors(myAllowSpecificOrigins);
 app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
