@@ -61,20 +61,36 @@ const useProductStore = defineStore('product', () => {
         .catch((err) => toast.error(err.response.data))
   }
 
-  const addImageVariant = async (file,variantData) => {
-    await axios.postForm('http://localhost:5000/api/image/UpLoadProductVariantImage', {
-      File: file,
-      variant: variantData
+  const addImageProduct = async (file, productData) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('productId', productData.id)
+    formData.append('category', productData.category)
+    formData.append('name', productData.name)
+
+    return await axios.post('http://localhost:5000/api/image/UpLoadProductImage', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).catch((err) => {
+      const errorMsg = err.response?.data?.title || err.response?.data || 'Ошибка загрузки фото товара'
+      toast.error(typeof errorMsg === 'string' ? errorMsg : 'Ошибка валидации фото')
+      throw err
     })
-    .catch((err) => toast.error(err.response.data))
   }
 
-  const addImageProduct = async (file,productData) => {
-    await axios.postForm('http://localhost:5000/api/image/UpLoadProductImage', {
-      File: file,
-      productDto: productData
+  const addImageVariant = async (file, variantData) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('variantId', variantData.id)
+    formData.append('color', variantData.color)
+    formData.append('size', variantData.size)
+
+    return await axios.post('http://localhost:5000/api/image/UpLoadProductVariantImage', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).catch((err) => {
+      const errorMsg = err.response?.data?.title || err.response?.data || 'Ошибка загрузки фото вариации'
+      toast.error(typeof errorMsg === 'string' ? errorMsg : 'Ошибка валидации фото')
+      throw err
     })
-        .catch((err) => toast.error(err.response.data))
   }
 
   const getProductImage = async (productId) => {

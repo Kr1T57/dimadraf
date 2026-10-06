@@ -1,10 +1,10 @@
 using GroupWorkAPI.Model;
+using GroupWorkAPI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<PostgresContext>(options =>
     options.UseLazyLoadingProxies().UseNpgsql(connectionString));
@@ -13,6 +13,8 @@ builder.Services.AddDbContext<PostgresContext>(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<AiService>();
 
 var myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddCors(options =>
@@ -42,5 +44,4 @@ app.UseCors(myAllowSpecificOrigins);
 app.UseStaticFiles();
 app.UseAuthorization();
 app.MapControllers();
-
 app.Run();
