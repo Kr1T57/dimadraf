@@ -3,6 +3,7 @@ using GroupWorkAPI.Internal;
 using GroupWorkAPI.Model;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace GroupWorkAPI.Controllers
 {
