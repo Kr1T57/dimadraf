@@ -20,7 +20,7 @@ const userStore = useUserStore()
         <router-link class="hover:text-blue-500" to="/profile" v-if="userStore.user"
           >Мой профиль</router-link
         >
-        <router-link class="hover:text-blue-500" to="/admin" v-if="userStore.user?.role === 'Менеджер'"
+        <router-link class="hover:text-blue-500" to="/admin" v-if="userStore.user?.role === 'Менеджер' || userStore.user?.role === 'Кладовщик'"
           >Услуги</router-link
         >
       </div>

@@ -23,7 +23,7 @@ onMounted(async () => {
  <!-- :key="$route.fullPath" заставляет Vue перезагружать карточку при переходе на другой товар -->
  <router-view :key="$route.fullPath"></router-view>
  <app-footer></app-footer>
- <app-ai-coach-widget />
+ <app-ai-coach-widget/>
  </div>
 </template>
 

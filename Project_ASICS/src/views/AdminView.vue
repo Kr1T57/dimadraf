@@ -1,11 +1,13 @@
 <script setup>
 import useProductStore from "@/stores/product.js";
 import {onBeforeMount, ref} from "vue";
+import useUserStore from "@/stores/user.js";
 
 const productStore = useProductStore()
 const isEditVariantOpen = ref(false)
 const isAddVariantOpen = ref(false)
 const isAddProductOpen = ref(false)
+const userStore = useUserStore()
 onBeforeMount(async () => {
   await productStore.productFun()
 })
@@ -24,19 +26,19 @@ onBeforeMount(async () => {
           <span>Главная</span>
         </router-link>
 
-        <router-link :to="{ name: 'admin-products' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
+        <router-link v-if="userStore.user?.role === 'Кладовщик'" :to="{ name: 'admin-products' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
           <span>Товары</span>
         </router-link>
 
-        <router-link :to="{ name: 'admin-orders' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
+        <router-link v-if="userStore.user?.role === 'Менеджер'" :to="{ name: 'admin-orders' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
           <span>Заказы</span>
         </router-link>
 
-        <router-link :to="{ name: 'admin-users' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
+        <router-link v-if="userStore.user?.role === 'Менеджер'" :to="{ name: 'admin-users' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
           <span>Пользователи</span>
         </router-link>
 
-        <router-link :to="{ name: 'admin-analytics' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
+        <router-link v-if="userStore.user?.role === 'Менеджер'" :to="{ name: 'admin-analytics' }" active-class="text-white" class="text-gray-400 hover:text-white transition-colors">
           <span>Аналитика</span>
         </router-link>
       </nav>

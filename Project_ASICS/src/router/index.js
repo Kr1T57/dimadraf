@@ -9,6 +9,8 @@ import CartView from '@/views/CartView.vue'
 import AdminView from "@/views/AdminView.vue";
 import FavoriteView from "@/views/FavoriteView.vue";
 
+import useUserStore from '@/stores/user.js'
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -55,7 +57,21 @@ const router = createRouter({
     {
       path: '/admin',
       component: () => import('@/views/AdminView.vue'),
-      redirect: { name: 'admin-products' },
+      redirect: to => {
+        // 2. Достаем полные данные пользователя из Pinia
+        const userStore = useUserStore()
+        const user = userStore.user
+
+        if (user) {
+          if (user.role === 'Менеджер') {
+            return { name: 'admin-orders' }
+          }
+          if (user.role === 'Кладовщик') {
+            return { name: 'admin-products' }
+          }
+        }
+        return { name: 'Home' }
+      },
       children: [
         {
           path: 'products',
