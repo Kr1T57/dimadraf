@@ -10,6 +10,7 @@ import AdminView from "@/views/AdminView.vue";
 import FavoriteView from "@/views/FavoriteView.vue";
 
 import useUserStore from '@/stores/user.js'
+import CompareView from "@/views/CompareView.vue";
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -94,6 +95,11 @@ const router = createRouter({
           component: () => import('@/components/AppAdminAnalytics.vue')
         }
       ]
+    },
+    {
+      path: '/compare',
+      component: CompareView,
+      name: 'Compare',
     }
   ],
   scrollBehavior(to, from, savedPosition) {
