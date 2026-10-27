@@ -30,13 +30,31 @@ const numberHouse = useTemplateRef('numberHouse')
 const postalIndex = useTemplateRef('postalIndex')
 
 const addOrder = async () => {
-  if (
-      !city.value.value ||
-      !street.value.value ||
-      !numberHouse.value.value ||
-      !postalIndex.value.value
-  ) {
+  const cityVal = city.value.value.trim()
+  const streetVal = street.value.value.trim()
+  const houseVal = numberHouse.value.value.trim()
+  const postalVal = postalIndex.value.value.trim()
+
+  if (!cityVal || !streetVal || !houseVal || !postalVal) {
     toast.error('Заполните все поля')
+    return
+  }
+
+  if (cityVal.length < 2) {
+    toast.error('Название города слишком короткое')
+    return
+  }
+  if (streetVal.length < 2) {
+    toast.error('Название улицы слишком короткое')
+    return
+  }
+
+  if (parseInt(houseVal) === 0) {
+    toast.error('Номер дома не может быть равен нулю')
+    return
+  }
+  if (String(postalIndex.value.value).length !== 6) {
+    toast.error('Почтовый индекс должен состоять ровно из 6 цифр')
     return
   }
   const order = {
@@ -87,6 +105,9 @@ const addOrder = async () => {
               ref="city"
               class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
               type="text"
+              maxlength="50"
+              placeholder="Например: Москва"
+              @input="e => e.target.value = e.target.value.replace(/[^a-zA-Zа-яА-ЯёЁ\s-]/g, '')"
           />
         </div>
 
@@ -96,6 +117,7 @@ const addOrder = async () => {
               ref="street"
               class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
               type="text"
+              maxlength="100"
           />
         </div>
 
@@ -104,10 +126,9 @@ const addOrder = async () => {
           <input
               ref="numberHouse"
               class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-              type="number"
-              maxlength="3"
-              max="999"
-              min="1"
+              type="text"
+              maxlength="4"
+              @input="e => e.target.value = e.target.value.replace(/\D/g, '')"
           />
         </div>
 
@@ -116,10 +137,9 @@ const addOrder = async () => {
           <input
               ref="postalIndex"
               class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-              type="number"
+              type="text"
               maxlength="6"
-              max="999999"
-              min="100000"
+              @input="e => e.target.value = e.target.value.replace(/\D/g, '')"
           />
         </div>
 
