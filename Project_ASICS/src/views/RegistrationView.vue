@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import useUserStore from '@/stores/user.js'
-import { useTemplateRef } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import { useToast } from 'vue-toastification'
 
 const name = useTemplateRef('name')
@@ -11,14 +11,38 @@ const phone = useTemplateRef('phone')
 const email = useTemplateRef('login')
 const password = useTemplateRef('password')
 
+const passwordError = ref('')
+
 const toast = useToast()
 const router = useRouter()
 const userStore = useUserStore()
 
+const validatePassword = () => {
+  const val = password.value?.value || ''
+
+  if (val.length < 8) {
+    passwordError.value = 'Пароль должен быть не менее 8 символов'
+    return false
+  }
+  if (!/[A-Z]/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну заглавную латинскую букву'
+    return false
+  }
+  if (!/[a-z]/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну строчную латинскую букву'
+    return false
+  }
+  if (!/\d/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну цифру'
+    return false
+  }
+
+  passwordError.value = ''
+  return true
+}
+
 const regexValidation = (value, type) => {
   switch (type) {
-    case 'password':
-      return String(value).match(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)
     case 'email':
       return String(value).match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]/)
     case 'phone':
@@ -28,11 +52,11 @@ const regexValidation = (value, type) => {
 
 const reg = async () => {
   if (
-    !name.value.value ||
-    !surname.value.value ||
-    !phone.value.value ||
-    !email.value.value ||
-    !password.value.value
+      !name.value.value ||
+      !surname.value.value ||
+      !phone.value.value ||
+      !email.value.value ||
+      !password.value.value
   ) {
     toast.error('Заполните все поля')
     return
@@ -41,10 +65,7 @@ const reg = async () => {
     toast.error('Неверный формат почты')
     return
   }
-  if (!regexValidation(password.value.value, 'password')) {
-    toast.error(
-      'Пароль должен быть не менее 8 символов, содержать нижний и верхний регистр и число',
-    )
+  if (!validatePassword()) {
     return
   }
   if (!regexValidation(phone.value.value, 'phone')) {
@@ -86,14 +107,22 @@ const reg = async () => {
       <span class="font-black mt-3">Номер телефона</span>
       <input class="w-full h-10 border border-black" type="tel" ref="phone" />
       <span class="font-black">Пароль</span>
-      <input class="w-full h-10 border border-black" type="password" ref="password" />
+      <input
+          class="w-full h-10 border border-black"
+          type="password"
+          ref="password"
+          @input="validatePassword"
+      />
+      <span v-if="passwordError" class="text-red-500 text-sm mt-1">
+        {{ passwordError }}
+      </span>
       <button class="w-full h-15 bg-black text-white text-2xl mt-5 w" @click="reg">
         Зарегистрироваться
       </button>
       <div class="flex justify-center items-center self-center flex-row mt-2">
         <h3>Есть аккаунта?</h3>
         <router-link class="text-black border-b-2 hover:text-blue-500" to="/authorization"
-          >Войти в аккаунт</router-link
+        >Войти в аккаунт</router-link
         >
       </div>
     </div>
