@@ -17,12 +17,9 @@ const userStore = useUserStore()
       </div>
       <div class="flex items-center space-x-6 text-gray-600">
         <router-link class="hover:text-blue-500" to="/catalog">Товары</router-link>
-        <router-link class="hover:text-blue-500" to="/profile" v-if="userStore.user"
-          >Мой профиль</router-link
-        >
-        <router-link class="hover:text-blue-500" to="/admin" v-if="userStore.user?.role === 'Менеджер'"
-          >Услуги</router-link
-        >
+        <router-link class="hover:text-blue-500" to="/compare" v-if="userStore.user">Сравнение</router-link>
+        <router-link class="hover:text-blue-500" to="/profile" v-if="userStore.user">Мой профиль</router-link>
+        <router-link class="hover:text-blue-500" to="/admin" v-if="userStore.user?.role === 'Менеджер' || userStore.user?.role === 'Кладовщик'">Услуги</router-link>
       </div>
       <div class="flex items-center space-x-6 text-gray-600">
         <button
