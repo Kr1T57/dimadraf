@@ -60,7 +60,6 @@ namespace GroupWorkAPI.Controllers
                     });
                 }
 
-                // Очистка ответа от возможных markdown-оберток
                 string cleanJson = Regex.Replace(aiResponse, @"```json\s*", "");
                 cleanJson = Regex.Replace(cleanJson, @"```\s*", "").Trim();
 
@@ -78,7 +77,6 @@ namespace GroupWorkAPI.Controllers
                     }
                 }
 
-                // Прикрепляем карточки тех товаров, которые выбрал ИИ
                 var selectedByAi = await _context.Products
                     .Where(p => ids.Contains(p.Id))
                     .Select(p => new AiProductRecommendationDTO
