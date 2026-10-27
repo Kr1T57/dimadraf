@@ -119,11 +119,9 @@ const reg = async () => {
       <button class="w-full h-15 bg-black text-white text-2xl mt-5 w" @click="reg">
         Зарегистрироваться
       </button>
-      <div class="flex justify-center items-center self-center flex-row mt-2">
+      <div class="flex justify-center items-center self-center flex-row mt-2 gap-1">
         <h3>Есть аккаунта?</h3>
-        <router-link class="text-black border-b-2 hover:text-blue-500" to="/authorization"
-        >Войти в аккаунт</router-link
-        >
+        <router-link class="text-black border-b-2 hover:text-blue-500" to="/authorization">Войти в аккаунт</router-link>
       </div>
     </div>
   </div>

@@ -39,11 +39,9 @@ const auth = async () => {
       <span class="font-black">Пароль</span>
       <input class="w-full h-10 border border-black" type="password" ref="password" />
       <button class="w-full h-15 bg-black text-white text-2xl mt-5 w" @click="auth">Войти</button>
-      <div class="flex justify-center items-center self-center flex-row mt-2">
+      <div class="flex justify-center items-center self-center flex-row mt-2 gap-1">
         <h3>Нету аккаунта?</h3>
-        <router-link class="text-black border-b-2 hover:text-blue-500" to="/registration"
-          >Создать аккаунт</router-link
-        >
+        <router-link class="text-black border-b-2 hover:text-blue-500" to="/registration">Создать аккаунт</router-link>
       </div>
     </div>
   </div>
