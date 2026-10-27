@@ -44,11 +44,11 @@ const useCartItemStore = defineStore('cartItem', () => {
   })
   const getCartItems = async (id) => {
     await axios
-      .get(`http://localhost:5000/api/cartItem/GetCartItem/${id}`)
-      .then((res) => {
-        currentCartItem.value = res.data
-      })
-      .catch((err) => toast.error(err.response.data))
+        .get(`http://localhost:5000/api/cartItem/GetCartItem/${id}`)
+        .then((res) => {
+          currentCartItem.value = (res.data || []).sort((a, b) => a.id - b.id)
+        })
+        .catch((err) => toast.error(err.response?.data || 'Ошибка загрузки корзины'))
   }
   const getCart = async (id) => {
     let cartSum
