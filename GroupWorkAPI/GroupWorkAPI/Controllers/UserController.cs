@@ -58,6 +58,17 @@ namespace GroupWorkAPI.Controllers
         [HttpPost("Registration")]
         public async Task<IActionResult> Registration([FromBody] UserDTO userDTO)
         {
+            // 1. Серверная проверка телефона (строго 11 цифр, формат +7XXXXXXXXXX)
+            string cleanPhone = System.Text.RegularExpressions.Regex.Replace(userDTO.Phone ?? "", @"[^\d]", "");
+            if (cleanPhone.Length == 11 && (cleanPhone.StartsWith("7") || cleanPhone.StartsWith("8")))
+            {
+                userDTO.Phone = "+7" + cleanPhone.Substring(1); // Ровно 12 символов (+79XXXXXXXXX)
+            }
+            else
+            {
+                return BadRequest("Некорректный номер телефона. Требуется 11 цифр.");
+            }
+
             if(await _context.Users.AnyAsync(x => x.Email == userDTO.Email))
             {
                 return BadRequest("Пользователь с таким Email занят!");

@@ -1,103 +1,209 @@
 <script setup>
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import useUserStore from '@/stores/user.js'
-import { useTemplateRef } from 'vue'
 import { useToast } from 'vue-toastification'
 
-const name = useTemplateRef('name')
-const surname = useTemplateRef('surname')
-const patronymic = useTemplateRef('patronymic')
-const phone = useTemplateRef('phone')
-const email = useTemplateRef('login')
-const password = useTemplateRef('password')
-
-const toast = useToast()
 const router = useRouter()
 const userStore = useUserStore()
+const toast = useToast()
 
-const regexValidation = (value, type) => {
-  switch (type) {
-    case 'password':
-      return String(value).match(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)
-    case 'email':
-      return String(value).match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]/)
-    case 'phone':
-      return String(value).match(/^(?:\+7|8|7)?(\d{10})$/)
+const surname = ref('')
+const name = ref('')
+const patronymic = ref('')
+const email = ref('')
+const phone = ref('')
+const password = ref('')
+const showPassword = ref(false)
+
+
+const onPhoneInput = (e) => {
+  const input = e.target
+  let digits = input.value.replace(/\D/g, '')
+
+  if (!digits || digits === '7' || digits === '8') {
+    input.value = ''
+    phone.value = ''
+    return
+  }
+
+  const formatted = formatPhone(digits)
+  input.value = formatted
+  phone.value = formatted
+}
+
+const onPhoneKeydown = (e) => {
+  const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End']
+  if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+    if (e.key === 'Backspace') {
+      const input = e.target
+      const start = input.selectionStart
+      const end = input.selectionEnd
+
+      if (start !== end) return
+
+      if (start <= 4) {
+        e.preventDefault()
+        input.value = ''
+        phone.value = ''
+        return
+      }
+
+      const charBefore = input.value[start - 1]
+      if (/\D/.test(charBefore)) {
+        e.preventDefault()
+
+        const textBefore = input.value.slice(0, start)
+        let digitsBefore = textBefore.replace(/\D/g, '')
+        if (digitsBefore.startsWith('7') || digitsBefore.startsWith('8')) {
+          digitsBefore = digitsBefore.slice(1)
+        }
+
+        let allDigits = input.value.replace(/\D/g, '')
+        if (allDigits.startsWith('7') || allDigits.startsWith('8')) {
+          allDigits = allDigits.slice(1)
+        }
+
+        if (digitsBefore.length > 0) {
+          const deleteIdx = digitsBefore.length - 1
+          allDigits = allDigits.slice(0, deleteIdx) + allDigits.slice(deleteIdx + 1)
+
+          const formatted = formatPhone(allDigits)
+          input.value = formatted
+          phone.value = formatted
+
+          const newPos = Math.max(0, start - 2)
+          input.setSelectionRange(newPos, newPos)
+        }
+      }
+    }
+    return
+  }
+
+  if (!/^\d$/.test(e.key)) {
+    e.preventDefault()
   }
 }
 
+const formatPhone = (rawDigits) => {
+  let digits = rawDigits.replace(/\D/g, '')
+  if (digits.startsWith('7') || digits.startsWith('8')) {
+    digits = digits.slice(1)
+  }
+  digits = digits.substring(0, 10)
+
+  if (!digits) return ''
+
+  let formatted = '+7 ('
+  if (digits.length > 0) formatted += digits.substring(0, 3)
+  if (digits.length >= 3) formatted += ') ' + digits.substring(3, 6)
+  if (digits.length >= 6) formatted += '-' + digits.substring(6, 8)
+  if (digits.length >= 8) formatted += '-' + digits.substring(8, 10)
+  return formatted
+}
+
 const reg = async () => {
-  if (
-    !name.value.value ||
-    !surname.value.value ||
-    !phone.value.value ||
-    !email.value.value ||
-    !password.value.value
-  ) {
-    toast.error('Заполните все поля')
+  if (!name.value.trim() || !surname.value.trim() || !email.value.trim() || !password.value.trim()) {
+    toast.error('Заполните все обязательные поля')
     return
   }
-  if (!regexValidation(email.value.value, 'email')) {
+
+  const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]{2,}$/
+  if (!emailRegex.test(email.value.trim())) {
     toast.error('Неверный формат почты')
     return
   }
-  if (!regexValidation(password.value.value, 'password')) {
-    toast.error(
-      'Пароль должен быть не менее 8 символов, содержать нижний и верхний регистр и число',
-    )
+
+  const rawDigits = phone.value.replace(/\D/g, '')
+  if (rawDigits.length !== 11) {
+    toast.error('Введите номер телефона полностью')
     return
   }
-  if (!regexValidation(phone.value.value, 'phone')) {
-    toast.error('Неверный формат номера телефона')
+  const cleanPhone = '+7' + rawDigits.slice(1)
+
+  const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/
+  if (!passwordRegex.test(password.value)) {
+    toast.error('Пароль должен быть не менее 8 символов, содержать строчную, заглавную букву и цифру')
     return
   }
+
   const user = {
     id: 0,
-    name: name.value.value,
-    surname: surname.value.value,
-    patronymic: patronymic.value.value,
-    phone: phone.value.value,
-    email: email.value.value,
-    password: password.value.value,
-    role: '',
+    name: name.value.trim(),
+    surname: surname.value.trim(),
+    patronymic: patronymic.value.trim() || '',
+    phone: cleanPhone,
+    email: email.value.trim(),
+    password: password.value,
+    role: ''
   }
+
   await userStore.registerUser(user)
-
-  toast.success('Добро пожаловать!')
-
   if (userStore.user) {
+    toast.success('Добро пожаловать!')
     await router.push('/')
   }
 }
 </script>
 
 <template>
-  <div class="min-h-screen w-full flex items-center justify-center bg-gray-100">
-    <div class="flex items-start justify-center w-200 p-5 border border-black flex-col">
-      <h1 class="font-black text-3xl mt-3">Регистрация</h1>
-      <span class="font-black mt-3">Фамилия</span>
-      <input class="w-full h-10 border border-black" type="text" ref="surname" />
-      <span class="font-black mt-3">Имя</span>
-      <input class="w-full h-10 border border-black" type="text" ref="name" />
-      <span class="font-black mt-3">Отчество</span>
-      <input class="w-full h-10 border border-black" type="text" ref="patronymic" />
-      <span class="font-black mt-3">Почта</span>
-      <input class="w-full h-10 border border-black" type="email" ref="login" />
-      <span class="font-black mt-3">Номер телефона</span>
-      <input class="w-full h-10 border border-black" type="tel" ref="phone" />
-      <span class="font-black">Пароль</span>
-      <input class="w-full h-10 border border-black" type="password" ref="password" />
-      <button class="w-full h-15 bg-black text-white text-2xl mt-5 w" @click="reg">
+  <div class="min-h-screen w-full flex items-center justify-center bg-gray-100 p-4">
+    <div class="flex items-start justify-center w-full max-w-lg p-8 border-2 border-black bg-white rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex-col">
+      <h1 class="font-black text-3xl mb-6 uppercase text-[rgb(0,30,98)]">Регистрация</h1>
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Фамилия *</span>
+      <input v-model="surname" class="w-full h-11 border-2 border-black px-3 font-bold mb-3 outline-none" type="text" />
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Имя *</span>
+      <input v-model="name" class="w-full h-11 border-2 border-black px-3 font-bold mb-3 outline-none" type="text" />
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Отчество</span>
+      <input v-model="patronymic" class="w-full h-11 border-2 border-black px-3 font-bold mb-3 outline-none" type="text" />
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Электронная почта *</span>
+      <input v-model="email" class="w-full h-11 border-2 border-black px-3 font-bold mb-3 outline-none" type="email" placeholder="example@mail.com" />
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Номер телефона *</span>
+      <input
+        :value="phone"
+        @input="onPhoneInput"
+        @keydown="onPhoneKeydown"
+        maxlength="18"
+        class="w-full h-11 border-2 border-black px-3 font-bold mb-3 outline-none"
+        type="tel"
+        placeholder="+7 (999) 000-00-00"
+      />
+
+      <span class="font-bold text-xs uppercase text-gray-500 mb-1">Пароль *</span>
+      <div class="relative w-full mb-6">
+        <input
+          v-model="password"
+          class="w-full h-11 border-2 border-black px-3 pr-24 font-bold outline-none"
+          :type="showPassword ? 'text' : 'password'"
+          placeholder="••••••••"
+        />
+        <button
+          type="button"
+          @click="showPassword = !showPassword"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-black uppercase text-gray-500 hover:text-black cursor-pointer px-2 py-1 select-none"
+        >
+          {{ showPassword ? 'Скрыть' : 'Показать' }}
+        </button>
+      </div>
+
+      <button
+        class="w-full h-14 bg-black text-white text-xl font-black uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0.5 hover:bg-gray-800 cursor-pointer transition-all"
+        @click="reg"
+      >
         Зарегистрироваться
       </button>
-      <div class="flex justify-center items-center self-center flex-row mt-2">
-        <h3>Есть аккаунта?</h3>
-        <router-link class="text-black border-b-2 hover:text-blue-500" to="/authorization"
-          >Войти в аккаунт</router-link
-        >
+
+      <div class="flex justify-center items-center self-center flex-row gap-2 mt-6 text-sm">
+        <span class="text-gray-500 font-bold">Уже есть аккаунт?</span>
+        <router-link class="text-black font-black border-b-2 border-black hover:text-blue-600 transition-colors" to="/authorization">
+          Войти в аккаунт
+        </router-link>
       </div>
     </div>
   </div>
 </template>
-
-<style scoped></style>

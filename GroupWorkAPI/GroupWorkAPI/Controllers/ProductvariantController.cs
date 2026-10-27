@@ -79,7 +79,7 @@ namespace GroupWorkAPI.Controllers
             {
                 return NotFound("Цвет не найден");
             }
-            if (productVariant.StockQuantity < 0) return BadRequest("Количество равно нулю!");
+            if (productVariant.StockQuantity < 0) return BadRequest("Количество не может быть меньше нуля!");
             productVariant.ProductId = product.Id;
             productVariant.ColorId = color.Id;
             productVariant.Size = productVariantDTO.Size;

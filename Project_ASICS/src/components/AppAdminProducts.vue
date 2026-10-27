@@ -56,10 +56,10 @@ const confirmDelete = async () => {
 
     <div class="w-1/6 flex justify-end gap-4 text-gray-500">
       <button class="hover:text-black transition-colors hover:cursor-pointer" title="Редактировать" @click="isModalOpen = true">
-        <span class="material-icons" >✏️</span>
+        <span class="material-icons">edit</span>
       </button>
       <button class="hover:text-red-500 transition-colors hover:cursor-pointer" title="Удалить" @click="confirmDelete">
-        <span class="material-icons">🗑️</span>
+        <span class="material-icons">delete</span>
       </button>
     </div>
     <teleport to="body">
