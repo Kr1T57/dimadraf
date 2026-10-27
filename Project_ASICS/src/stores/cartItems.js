@@ -11,16 +11,23 @@ const useCartItemStore = defineStore('cartItem', () => {
     try {
       const res = await axios.post('http://localhost:5000/api/cartItem/AddCartItem', cartData)
       cartItem.value = res.data
+      if (cartData?.userId) {
+        await getCartItems(cartData.userId)
+      }
       return true
     } catch (err) {
       toast.error(err.response?.data || 'Ошибка при добавлении')
       return false
     }
   }
+
   const minusToCart = async (cartData) => {
     try {
       const res = await axios.put('http://localhost:5000/api/cartItem/SubtractCartItem', cartData)
       cartItem.value = res.data
+      if (cartData?.userId) {
+        await getCartItems(cartData.userId)
+      }
       return true
     } catch (err) {
       toast.error(err.response?.data || 'Ошибка при уменьшении количества')
@@ -62,6 +69,12 @@ const useCartItemStore = defineStore('cartItem', () => {
     cartItem.value = null
     currentCartItem.value = []
   }
+  const cartTotalQuantity = computed(() => {
+    return currentCartItem.value.reduce((sum, item) => {
+      const q = Number(item.quantity ?? item.Quantity) || 0
+      return sum + q
+    }, 0)
+  })
   return {
     cartItem,
     addToCart,
@@ -72,6 +85,7 @@ const useCartItemStore = defineStore('cartItem', () => {
     removeCart,
     clearAllCart,
     cartTotalPrice,
+    cartTotalQuantity
   }
 })
 export default useCartItemStore
