@@ -11,7 +11,7 @@ export const useAiStore = defineStore('ai', () => {
   const productStore = useProductStore()
 
   const API_KEY = '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'
-  const MODEL = 'nvidia/nemotron-3-super-120b-a12b:free'
+  const MODEL = 'nvidia/nemotron-3.5-super-vl:free'
 
   let activeCoachAbort = null
 
