@@ -24,7 +24,7 @@ const userStore = useUserStore()
       <div class="flex items-center space-x-6 text-gray-600">
         <button
             v-if="userStore.user"
-            class="flex items-center gap-3 text-4xl  hover:scale-110 transition-transform"
+            class="flex items-center gap-3 text-4xl  hover:scale-110 transition-transform cursor-pointer"
             @click="router.push({ name: 'Favorite' })"
             title="Избранное"
         >
@@ -32,7 +32,7 @@ const userStore = useUserStore()
         </button>
         <router-link to="/cart">
           <button
-            class="flex items-center gap-3 text-2xl"
+            class="flex items-center gap-3 text-2xl cursor-pointer"
             v-if="userStore.user"
             @click="router.push({ name: 'Cart' })"
           >
