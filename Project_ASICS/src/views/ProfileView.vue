@@ -124,12 +124,15 @@ const syncForm = () => {
   }
 }
 
-onMounted(async () => {
-  if (userStore.user?.id) {
-    await orderStore.getUserOrderHistory(userStore.user.id)
+watch(
+  () => userStore.user,
+  (user) => {
+    if (!user?.id) return
     syncForm()
-  }
-})
+    orderStore.getUserOrderHistory(user.id)
+  },
+  { immediate: true }
+)
 
 const saveProfile = async () => {
   if (!form.value.name.trim() || !form.value.surname.trim() || !form.value.email.trim()) {
