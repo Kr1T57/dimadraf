@@ -67,7 +67,7 @@ const addOrder = async () => {
     toast.success('Успешно оформлено')
 
     emit('closeModal')
-    await router.push({ name: 'Profile' })
+    await router.push({ name: 'Catalog' })
   } finally {
     isLoading.value = false
   }
