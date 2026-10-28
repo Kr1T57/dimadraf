@@ -33,16 +33,15 @@ const postalIndex = useTemplateRef('postalIndex')
 const isLoading = ref(false)
 
 const addOrder = async () => {
-  const cityVal = city.value.value.trim()
-  const streetVal = street.value.value.trim()
-  const houseVal = numberHouse.value.value.trim()
-  const postalVal = postalIndex.value.value.trim()
+  const cityVal = city.value?.value?.trim()
+  const streetVal = street.value?.value?.trim()
+  const houseVal = numberHouse.value?.value?.trim()
+  const postalVal = postalIndex.value?.value?.trim()
 
   if (!cityVal || !streetVal || !houseVal || !postalVal) {
     toast.error('Заполните все поля')
     return
   }
-
   if (cityVal.length < 2) {
     toast.error('Название города слишком короткое')
     return
@@ -51,34 +50,14 @@ const addOrder = async () => {
     toast.error('Название улицы слишком короткое')
     return
   }
-
-  if (parseInt(houseVal) === 0) {
+  if (parseInt(houseVal, 10) === 0) {
     toast.error('Номер дома не может быть равен нулю')
     return
   }
-  if (String(postalIndex.value.value).length !== 6) {
+  if (postalVal.length !== 6) {
     toast.error('Почтовый индекс должен состоять ровно из 6 цифр')
     return
   }
-  const order = {
-    id: 0,
-    user: userStore.user.email,
-    orderDate: '',
-    status: 'Ожидает',
-    totalAmount: props.totalPrice,
-    city: city.value.value,
-    street: street.value.value,
-    house: numberHouse.value.value,
-    postalCode: postalIndex.value.value,
-  }
-  await orderStore.addOrder(order)
-  emit('closeModal')
-  if (!orderStore.order) {
-    return
-  }
-  await orderStore.addOrderItem(userStore.user.id,orderStore.order.id)
-  cartStore.clearAllCart()
-  toast.success('Успешно оформлено')
 
   if (isLoading.value) return
   isLoading.value = true
