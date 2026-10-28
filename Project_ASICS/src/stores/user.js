@@ -33,7 +33,7 @@ const useUserStore = defineStore('user', () => {
           user.value = res.data
 
           localStorage.setItem('user', JSON.stringify({
-            login: userData.login,
+            login: userData.email,
             password: userData.password
           }))
         })

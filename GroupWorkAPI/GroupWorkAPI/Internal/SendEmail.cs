@@ -77,7 +77,7 @@ namespace GroupWorkAPI.Internal
       </td>
       <td style=""padding-bottom: 8px; text-align: right; font-size: 12px; font-weight: bold; text-transform: uppercase; font-family: sans-serif;"">
         <span style=""color: #64748b; display: block; font-size: 11px;"">Дата и время:</span>
-        <span style=""font-size: 14px; font-weight: 900;"">{fullOrder.OrderDate:dd.05.yyyy HH:mm}</span>
+        <span style=""font-size: 14px; font-weight: 900;"">{fullOrder.OrderDate:dd.MM.yyyy HH:mm}</span>
       </td>
     </tr>
     <tr>

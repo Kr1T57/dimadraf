@@ -1,7 +1,7 @@
 <script setup>
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import useUserStore from '@/stores/user.js'
-import { ref, useTemplateRef, watch } from 'vue'
 import useOrderStore from '@/stores/order.js'
 import { useToast } from 'vue-toastification'
 import AppProfileOrder from '@/components/AppProfileOrder.vue'
@@ -9,232 +9,276 @@ import AppProfileOrder from '@/components/AppProfileOrder.vue'
 const router = useRouter()
 const userStore = useUserStore()
 const orderStore = useOrderStore()
-const isModalOpen = ref(false)
-
-const name = useTemplateRef('name')
-const surname = useTemplateRef('surname')
-const patronymic = useTemplateRef('patronymic')
-const phone = useTemplateRef('phone')
-const email = useTemplateRef('login')
-
 const toast = useToast()
 
-watch(
-    () => userStore.user?.id,
-    (userId) => {
-      if (userId) {
-        orderStore.getUserOrderHistory(userId)
-      }
-    },
-    { immediate: true }
-)
+const currentTab = ref('data')
 
-const regexValidation = (value, type) => {
-  switch (type) {
-    case 'password':
-      return String(value).match(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/)
-    case 'email':
-      return String(value).match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[A-Za-z]/)
-    case 'phone':
-      return String(value).match(/^(?:\+7|8|7)?(\d{10})$/)
+const form = ref({
+  name: '',
+  surname: '',
+  patronymic: '',
+  email: '',
+  phone: ''
+})
+
+const formatPhone = (rawDigits) => {
+  let digits = rawDigits.replace(/\D/g, '')
+  if (digits.startsWith('7') || digits.startsWith('8')) {
+    digits = digits.slice(1)
+  }
+  digits = digits.substring(0, 10)
+
+  if (!digits) return ''
+
+  let formatted = '+7 ('
+  if (digits.length > 0) formatted += digits.substring(0, 3)
+  if (digits.length >= 3) formatted += ') ' + digits.substring(3, 6)
+  if (digits.length >= 6) formatted += '-' + digits.substring(6, 8)
+  if (digits.length >= 8) formatted += '-' + digits.substring(8, 10)
+  return formatted
+}
+
+const onPhoneKeydown = (e) => {
+  const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End']
+  if (allowedKeys.includes(e.key) || e.ctrlKey || e.metaKey) {
+    if (e.key === 'Backspace') {
+      const input = e.target
+      const start = input.selectionStart
+      const end = input.selectionEnd
+
+      if (start !== end) return
+
+      if (start <= 4) {
+        e.preventDefault()
+        input.value = ''
+        form.value.phone = ''
+        return
+      }
+
+      const charBefore = input.value[start - 1]
+      if (/\D/.test(charBefore)) {
+        e.preventDefault()
+
+        const textBefore = input.value.slice(0, start)
+        let digitsBefore = textBefore.replace(/\D/g, '')
+        if (digitsBefore.startsWith('7') || digitsBefore.startsWith('8')) {
+          digitsBefore = digitsBefore.slice(1)
+        }
+
+        let allDigits = input.value.replace(/\D/g, '')
+        if (allDigits.startsWith('7') || allDigits.startsWith('8')) {
+          allDigits = allDigits.slice(1)
+        }
+
+        if (digitsBefore.length > 0) {
+          const deleteIdx = digitsBefore.length - 1
+          allDigits = allDigits.slice(0, deleteIdx) + allDigits.slice(deleteIdx + 1)
+
+          const formatted = formatPhone(allDigits)
+          input.value = formatted
+          form.value.phone = formatted
+
+          const newPos = Math.max(0, start - 2)
+          input.setSelectionRange(newPos, newPos)
+        }
+      }
+    }
+    return
+  }
+
+  if (!/^\d$/.test(e.key)) {
+    e.preventDefault()
   }
 }
 
-const ed = async () => {
-  const trimmedName = name.value.value.trim()
-  const trimmedSurname = surname.value.value.trim()
-  const trimmedPatronymic = patronymic.value.value ? patronymic.value.value.trim() : ''
-  const trimmedEmail = email.value.value.trim()
-  const trimmedPhone = phone.value.value.trim()
+const onPhoneInput = (e) => {
+  const input = e.target
+  let digits = input.value.replace(/\D/g, '')
 
-  if (!trimmedName || !trimmedSurname || !trimmedPhone || !trimmedEmail) {
-    toast.error('Заполните все поля')
+  if (!digits || digits === '7' || digits === '8') {
+    input.value = ''
+    form.value.phone = ''
     return
   }
-  if (!regexValidation(trimmedEmail, 'email')) {
-    toast.error('Неверный формат почты')
+
+  const formatted = formatPhone(digits)
+  input.value = formatted
+  form.value.phone = formatted
+}
+
+const syncForm = () => {
+  if (userStore.user) {
+    form.value.name = userStore.user.name || ''
+    form.value.surname = userStore.user.surname || ''
+    form.value.patronymic = userStore.user.patronymic || ''
+    form.value.email = userStore.user.email || ''
+
+    let p = (userStore.user.phone || '').replace(/\D/g, '')
+    if (p.startsWith('7') || p.startsWith('8')) p = p.slice(1)
+    let formatted = '+7 ('
+    if (p.length > 0) formatted += p.substring(0, 3)
+    if (p.length >= 3) formatted += ') ' + p.substring(3, 6)
+    if (p.length >= 6) formatted += '-' + p.substring(6, 8)
+    if (p.length >= 8) formatted += '-' + p.substring(8, 10)
+    form.value.phone = formatted
+  }
+}
+
+onMounted(async () => {
+  if (userStore.user?.id) {
+    await orderStore.getUserOrderHistory(userStore.user.id)
+    syncForm()
+  }
+})
+
+const saveProfile = async () => {
+  if (!form.value.name.trim() || !form.value.surname.trim() || !form.value.email.trim()) {
+    toast.error('Заполните обязательные поля')
     return
   }
-  if (!regexValidation(trimmedPhone, 'phone')) {
-    toast.error('Неверный формат номера телефона')
+
+  const rawPhone = form.value.phone.replace(/\D/g, '')
+  if (rawPhone.length !== 11) {
+    toast.error('Введите номер телефона полностью')
     return
   }
+
+  const cleanPhone = '+7' + rawPhone.slice(1)
 
   const updatedData = {
     ...userStore.user,
-    name: trimmedName,
-    surname: trimmedSurname,
-    patronymic: trimmedPatronymic,
-    email: trimmedEmail,
-    phone: trimmedPhone
+    name: form.value.name.trim(),
+    surname: form.value.surname.trim(),
+    patronymic: form.value.patronymic?.trim() || '',
+    email: form.value.email.trim(),
+    phone: cleanPhone
   }
+
   const success = await userStore.editUser(updatedData)
   if (success) {
-    isModalOpen.value = false
+    syncForm()
   }
 }
+
 const logout = () => {
   userStore.logout()
 }
 </script>
 
 <template>
-  <div class="p-10 flex items-start justify-start bg-gray-100 gap-10 min-h-screen">
-    <div class="relative mt-10">
-      <label class="absolute top-0 left-5 -translate-y-1/2 bg-gray-100 px-2">Мой профиль</label>
-      <div
-        class="flex items-start justify-center w-130 p-5 gap-1 border border-black flex-col"
-        id="mainDiv"
-      >
-        <div class="flex items-center justify-between w-full mb-4">
-          <h1 class="font-black text-3xl mt-3 text-[rgb(0,30,98)]">Персональные данные</h1>
-          <button
-            class="font-bold text-3xl hover:text-blue-500 cursor-pointer"
-            @click="isModalOpen = true"
-          >
-            ✎
-          </button>
-        </div>
-        <h2 class="font-black mt-3 text-[rgb(0,30,98)]">Имя</h2>
-        <span
-          class="w-full h-10 flex items-center px-3 border border-black"
-          v-if="userStore.user"
-          >{{ userStore.user.name }}</span
+  <div class="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 text-black font-[Franklin]">
+    <div class="max-w-4xl mx-auto flex flex-col items-center">
+      <!-- Заголовок по центру -->
+      <h1 class="text-4xl font-black uppercase italic tracking-tighter text-[rgb(0,30,98)] mb-8 text-center">
+        Личный кабинет
+      </h1>
+
+      <!-- Вкладки по центру -->
+      <div class="flex justify-center gap-4 border-b-2 border-black pb-4 mb-8 w-full max-w-xl">
+        <button
+          @click="currentTab = 'data'"
+          :class="[
+            'px-6 py-2.5 font-black uppercase text-xs sm:text-sm border-2 border-black rounded-xl transition-all cursor-pointer',
+            currentTab === 'data'
+              ? 'bg-[rgb(0,30,98)] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+              : 'bg-white text-black hover:bg-gray-100'
+          ]"
         >
-        <h2 class="font-black mt-3 text-[rgb(0,30,98)]">Фамилия</h2>
-        <span
-          class="w-full h-10 flex items-center px-3 border border-black"
-          v-if="userStore.user"
-          >{{ userStore.user.surname }}</span
-        >
-        <h2 class="font-black mt-3 text-[rgb(0,30,98)]">Отчество</h2>
-        <span
-          class="w-full h-10 flex items-center px-3 border border-black"
-          v-if="userStore.user"
-          >{{ userStore.user?.patronymic || 'Отсутствует' }}</span
-        >
-        <h2 class="font-black text-[rgb(0,30,98)]">Почта</h2>
-        <span
-          class="w-full h-10 flex items-center px-3 border border-black"
-          v-if="userStore.user"
-          >{{ userStore.user.email }}</span
-        >
-        <h2 class="font-black text-[rgb(0,30,98)]">Телефон</h2>
-        <span
-          class="w-full h-10 flex items-center px-3 border border-black"
-          v-if="userStore.user"
-          >{{ userStore.user.phone }}</span
-        >
+          Персональные данные
+        </button>
 
         <button
-            @click="logout"
-            class="w-full h-12 border border-red-600 text-red-600 font-black text-lg uppercase rounded-xl hover:bg-red-50 cursor-pointer transition-colors mt-6"
+          @click="currentTab = 'orders'"
+          :class="[
+            'px-6 py-2.5 font-black uppercase text-xs sm:text-sm border-2 border-black rounded-xl transition-all cursor-pointer flex items-center gap-2',
+            currentTab === 'orders'
+              ? 'bg-[rgb(0,30,98)] text-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]'
+              : 'bg-white text-black hover:bg-gray-100'
+          ]"
         >
-          Выйти из аккаунта
+          История заказов
+          <!-- Счетчик в стиле сайта (белый с темно-синим текстом) -->
+          <span
+            :class="[
+              'text-xs px-2 py-0.5 rounded-full border border-black font-black',
+              currentTab === 'orders'
+                ? 'bg-white text-[rgb(0,30,98)]'
+                : 'bg-[rgb(0,30,98)] text-white'
+            ]"
+          >
+            {{ orderStore.orderHistory?.length || 0 }}
+          </span>
         </button>
       </div>
-    </div>
-    <div class="flex items-start justify-center w-150 p-5 border border-black flex-col mt-10">
-      <h1 class="font-black text-3xl mt-3 text-[rgb(0,30,98)]">История заказов</h1>
-      <div class="w-full flex flex-col">
-        <template v-if="orderStore.orderHistory && orderStore.orderHistory.length > 0">
-          <AppProfileOrder
-              v-for="orderItem in orderStore.orderHistory"
-              :key="orderItem.OrderId"
-              :order="orderItem"
-          />
-        </template>
 
-        <span v-else class="text-gray-500 italic">История пока пуста (нет доставленных заказов)</span>
-      </div>
-    </div>
-    <Teleport to="body">
+      <!-- Вкладка 1: Редактирование профиля (ровно по центру) -->
       <div
-        v-if="isModalOpen"
-        class="fixed inset-0 bg-black/50 flex items-center justify-center z-[999] p-4"
+        v-if="currentTab === 'data'"
+        class="w-full max-w-xl bg-white border-2 border-black p-8 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
       >
-        <div
-          class="bg-white w-full max-w-lg border-2 border-black p-8 flex flex-col relative rounded-2xl"
-        >
-          <button
-            @click="isModalOpen = false"
-            class="absolute top-4 right-4 text-2xl font-bold cursor-pointer"
-          >
-            ✕
-          </button>
+        <h2 class="text-2xl font-black uppercase mb-6 text-[rgb(0,30,98)] text-center">
+          Редактирование профиля
+        </h2>
+        <div class="flex flex-col gap-4">
+          <div>
+            <label class="text-xs font-bold uppercase text-gray-500">Фамилия *</label>
+            <input v-model="form.surname" class="w-full h-11 border-2 border-black px-3 mt-1 font-bold outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-bold uppercase text-gray-500">Имя *</label>
+            <input v-model="form.name" class="w-full h-11 border-2 border-black px-3 mt-1 font-bold outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-bold uppercase text-gray-500">Отчество</label>
+            <input v-model="form.patronymic" class="w-full h-11 border-2 border-black px-3 mt-1 font-bold outline-none" />
+          </div>
+          <div>
+            <label class="text-xs font-bold uppercase text-gray-500">Электронная почта *</label>
+            <input v-model="form.email" type="email" class="w-full h-11 border-2 border-black px-3 mt-1 font-bold outline-none" />
+          </div>
+          <div>
+          <label class="text-xs font-bold uppercase text-gray-500">Номер телефона *</label>
+          <input
+            :value="form.phone"
+            @input="onPhoneInput"
+            @keydown="onPhoneKeydown"
+            maxlength="18"
+            class="w-full h-11 border-2 border-black px-3 mt-1 font-bold outline-none"
+            type="tel"
+            placeholder="+7 (999) 000-00-00"
+          />
+        </div>
 
-          <h1 class="font-black text-3xl mb-6 uppercase text-[rgb(0,30,98)]">Изменить данные</h1>
-
-          <div class="flex flex-col gap-4">
-            <div class="flex flex-col">
-              <label class="text-xs uppercase mb-1 text-[rgb(0,30,98)]">Имя</label>
-              <input
-                :value="userStore.user.name"
-                ref="name"
-                class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-                type="text"
-              />
-            </div>
-
-            <div class="flex flex-col">
-              <label class="text-xs uppercase mb-1 text-[rgb(0,30,98)]">Фамилия</label>
-              <input
-                :value="userStore.user.surname"
-                ref="surname"
-                class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-                type="text"
-              />
-            </div>
-
-            <div class="flex flex-col">
-              <label class="text-xs uppercase mb-1 text-[rgb(0,30,98)]">Отчество</label>
-              <input
-                :value="userStore.user.patronymic"
-                ref="patronymic"
-                class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-                type="text"
-              />
-            </div>
-
-            <div class="flex flex-col">
-              <label class="text-xs uppercase mb-1 text-[rgb(0,30,98)]">Почта</label>
-              <input
-                :value="userStore.user.email"
-                ref="login"
-                class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-                type="text"
-              />
-            </div>
-
-            <div class="flex flex-col">
-              <label class="text-xs uppercase mb-1 text-[rgb(0,30,98)]">Телефон</label>
-              <input
-                :value="userStore.user.phone"
-                ref="phone"
-                class="w-full h-12 border border-black px-3 focus:bg-gray-50 outline-none"
-                type="text"
-              />
-            </div>
-
-            <div class="flex flex-row justify-between gap-3 mt-6">
-              <button
-                @click="isModalOpen = false"
-                class="w-full h-14 rounded-xl border border-black bg-blue-50 text-[rgb(0,30,98)] text-xl uppercase hover:bg-gray-100 cursor-pointer"
-              >
-                Отмена
-              </button>
-              <button
-                @click="ed"
-                class="w-full h-14 rounded-xl bg-[rgb(0,30,98)] text-white font-black text-xl uppercase hover:bg-gray-800 cursor-pointer"
-              >
-                Сохранить
-              </button>
-            </div>
+          <div class="flex gap-4 mt-6">
+            <button
+              @click="saveProfile"
+              class="flex-1 bg-black text-white py-3.5 font-black uppercase text-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0.5 cursor-pointer hover:bg-gray-800 transition-colors"
+            >
+              Сохранить данные
+            </button>
+            <button
+              @click="logout"
+              class="border-2 border-red-600 text-red-600 py-3.5 px-6 font-black uppercase text-sm hover:bg-red-50 cursor-pointer transition-colors"
+            >
+              Выйти
+            </button>
           </div>
         </div>
       </div>
-    </Teleport>
+
+      <!-- Вкладка 2: История заказов -->
+      <div v-if="currentTab === 'orders'" class="w-full max-w-3xl">
+        <div v-if="orderStore.orderHistory && orderStore.orderHistory.length > 0" class="flex flex-col gap-4">
+          <AppProfileOrder
+            v-for="order in orderStore.orderHistory"
+            :key="order.orderId"
+            :order="order"
+          />
+        </div>
+        <div v-else class="border-4 border-black border-dashed p-12 text-center rounded-2xl bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+          <p class="text-gray-400 font-bold uppercase text-sm">У вас пока нет доставленных заказов</p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
-
-<style scoped></style>
