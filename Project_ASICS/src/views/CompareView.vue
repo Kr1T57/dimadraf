@@ -24,7 +24,6 @@ const updateVisibleCount = () => {
   else visibleCount.value = 4
 }
 
-// 1 & 3. Объединяем избранные товары и вариации без дубликатов
 const comparedProducts = computed(() => {
   if (!userStore.user || !productStore.products?.length) return []
 
@@ -38,7 +37,6 @@ const comparedProducts = computed(() => {
   })
 })
 
-// Категории с количеством товаров
 const categoriesWithCount = computed(() => {
   const counts = {}
   for (const product of comparedProducts.value) {
@@ -48,7 +46,6 @@ const categoriesWithCount = computed(() => {
   return Object.entries(counts).map(([name, count]) => ({ name, count }))
 })
 
-// 6. По умолчанию выбираем первую доступную категорию
 watch(categoriesWithCount, (cats) => {
   if (cats.length === 0) {
     selectedCategory.value = ''
@@ -59,13 +56,11 @@ watch(categoriesWithCount, (cats) => {
   }
 }, { immediate: true })
 
-// 2. Товары только выбранной категории
 const categoryProducts = computed(() => {
   if (!selectedCategory.value) return []
   return comparedProducts.value.filter(p => p.category === selectedCategory.value)
 })
 
-// DNS-карусель / сдвиг товаров
 const maxStartIndex = computed(() => Math.max(0, categoryProducts.value.length - visibleCount.value))
 const canPrev = computed(() => startIndex.value > 0)
 const canNext = computed(() => startIndex.value < maxStartIndex.value)
@@ -82,7 +77,6 @@ const visibleProducts = computed(() => {
   return categoryProducts.value.slice(startIndex.value, startIndex.value + visibleCount.value)
 })
 
-// 7. Загрузка основных изображений
 const loadImages = async (products) => {
   for (const p of products) {
     if (productImages.value[p.id]) continue
@@ -98,12 +92,10 @@ watch(categoryProducts, (products) => {
   loadImages(products)
 }, { immediate: true })
 
-// 1. Проверка наличия хотя бы одной вариации на складе
 const isInStock = (product) => {
   return product.variants?.some(v => Number(v.stockQuantity) > 0) ?? false
 }
 
-// 8. Переход на страницу товара по клику на фото
 const goToProduct = (productId) => {
   router.push({ name: 'Product', params: { id: productId } })
 }
@@ -141,7 +133,7 @@ watch(() => userStore.user, async (newUser) => {
         Сравнение характеристик моделей из вашего избранного
       </p>
 
-      <!-- 5. Плашка при отсутствии товаров -->
+      <!-- Плашка при отсутствии товаров -->
       <div
           v-if="comparedProducts.length === 0"
           class="border-4 border-black border-dashed p-12 text-center rounded-2xl bg-white shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] max-w-xl mx-auto my-16"

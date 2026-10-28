@@ -59,7 +59,6 @@ const router = createRouter({
       path: '/admin',
       component: () => import('@/views/AdminView.vue'),
       redirect: to => {
-        // 2. Достаем полные данные пользователя из Pinia
         const userStore = useUserStore()
         const user = userStore.user
 

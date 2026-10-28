@@ -1,7 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import useUserStore from '@/stores/user.js'
-import { ref, useTemplateRef, onMounted } from 'vue'
+import { ref, useTemplateRef, watch } from 'vue'
 import useOrderStore from '@/stores/order.js'
 import { useToast } from 'vue-toastification'
 import AppProfileOrder from '@/components/AppProfileOrder.vue'
@@ -19,11 +19,15 @@ const email = useTemplateRef('login')
 
 const toast = useToast()
 
-onMounted(async () => {
-  if (userStore.user && userStore.user.id) {
-    await orderStore.getUserOrderHistory(userStore.user.id)
-  }
-})
+watch(
+    () => userStore.user?.id,
+    (userId) => {
+      if (userId) {
+        orderStore.getUserOrderHistory(userId)
+      }
+    },
+    { immediate: true }
+)
 
 const regexValidation = (value, type) => {
   switch (type) {
