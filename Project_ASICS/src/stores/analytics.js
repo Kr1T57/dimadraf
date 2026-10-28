@@ -1,5 +1,5 @@
 import {defineStore} from "pinia";
-import { ref } from 'vue'
+import {computed, ref} from 'vue'
 import axios from 'axios'
 import { useToast } from 'vue-toastification'
 
@@ -92,6 +92,9 @@ const useAnalyticsStore = defineStore('analytics', () => {
         userProductFavorites.value = []
         userVariantFavorites.value = []
     }
+    const totalFavoritesCount = computed(() => {
+        return userProductFavorites.value.length + userVariantFavorites.value.length
+    })
 
     return {
         mostLikedProducts,
@@ -105,7 +108,8 @@ const useAnalyticsStore = defineStore('analytics', () => {
         fetchUserFavorites,
         toggleProductFavorite,
         toggleVariantFavorite,
-        clearFavorites
+        clearFavorites,
+        totalFavoritesCount
     }
 })
 

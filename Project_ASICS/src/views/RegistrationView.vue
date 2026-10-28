@@ -1,8 +1,8 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import useUserStore from '@/stores/user.js'
 import { useToast } from 'vue-toastification'
+import useUserStore from '@/stores/user.js'
 
 const router = useRouter()
 const userStore = useUserStore()
@@ -14,8 +14,8 @@ const patronymic = ref('')
 const email = ref('')
 const phone = ref('')
 const password = ref('')
+const passwordError = ref('')
 const showPassword = ref(false)
-
 
 const onPhoneInput = (e) => {
   const input = e.target
@@ -102,6 +102,30 @@ const formatPhone = (rawDigits) => {
   return formatted
 }
 
+const validatePassword = () => {
+  const val = password.value
+
+  if (val.length < 8) {
+    passwordError.value = 'Пароль должен быть не менее 8 символов'
+    return false
+  }
+  if (!/[A-Z]/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну заглавную латинскую букву'
+    return false
+  }
+  if (!/[a-z]/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну строчную латинскую букву'
+    return false
+  }
+  if (!/\d/.test(val)) {
+    passwordError.value = 'Пароль должен содержать хотя бы одну цифру'
+    return false
+  }
+
+  passwordError.value = ''
+  return true
+}
+
 const reg = async () => {
   if (!name.value.trim() || !surname.value.trim() || !email.value.trim() || !password.value.trim()) {
     toast.error('Заполните все обязательные поля')
@@ -119,13 +143,12 @@ const reg = async () => {
     toast.error('Введите номер телефона полностью')
     return
   }
-  const cleanPhone = '+7' + rawDigits.slice(1)
 
-  const passwordRegex = /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/
-  if (!passwordRegex.test(password.value)) {
-    toast.error('Пароль должен быть не менее 8 символов, содержать строчную, заглавную букву и цифру')
+  if (!validatePassword()) {
     return
   }
+
+  const cleanPhone = '+7' + rawDigits.slice(1)
 
   const user = {
     id: 0,
@@ -139,6 +162,7 @@ const reg = async () => {
   }
 
   await userStore.registerUser(user)
+
   if (userStore.user) {
     toast.success('Добро пожаловать!')
     await router.push('/')
@@ -175,9 +199,10 @@ const reg = async () => {
       />
 
       <span class="font-bold text-xs uppercase text-gray-500 mb-1">Пароль *</span>
-      <div class="relative w-full mb-6">
+      <div class="relative w-full" :class="passwordError ? 'mb-1' : 'mb-6'">
         <input
           v-model="password"
+          @input="validatePassword"
           class="w-full h-11 border-2 border-black px-3 pr-24 font-bold outline-none"
           :type="showPassword ? 'text' : 'password'"
           placeholder="••••••••"
@@ -190,6 +215,9 @@ const reg = async () => {
           {{ showPassword ? 'Скрыть' : 'Показать' }}
         </button>
       </div>
+      <span v-if="passwordError" class="text-red-500 text-xs font-bold mb-4">
+        {{ passwordError }}
+      </span>
 
       <button
         class="w-full h-14 bg-black text-white text-xl font-black uppercase border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:translate-y-0.5 hover:bg-gray-800 cursor-pointer transition-all"

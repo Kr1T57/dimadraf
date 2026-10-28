@@ -143,9 +143,10 @@ namespace GroupWorkAPI.Internal
             var smtpClient = new SmtpClient("smtp.gmail.com")
             {
                 Port = 587,
+                UseDefaultCredentials = false,
                 Credentials = new NetworkCredential("rafaelguccigang@gmail.com", "ewes mtoi dswt xrvh"),
                 EnableSsl = true,
-                UseDefaultCredentials = false
+                
             };
 
             MailAddress from = new("rafaelguccigang@gmail.com", "ASICS Store");
