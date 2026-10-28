@@ -122,7 +122,14 @@ namespace GroupWorkAPI.Controllers
             Order? order = await _context.Orders.FirstOrDefaultAsync(o => o.Id == orderId);
             if (order != null)
             {
-                await SendEmail.SendReceipt(_context, order);
+                try
+                {
+                    await SendEmail.SendReceipt(_context, order);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка отправки чека: {ex.Message}");
+                }
             }
             return Ok();
         }

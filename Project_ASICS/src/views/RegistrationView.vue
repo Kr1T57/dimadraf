@@ -84,9 +84,8 @@ const reg = async () => {
   }
   await userStore.registerUser(user)
 
-  toast.success('Добро пожаловать!')
-
   if (userStore.user) {
+    toast.success('Добро пожаловать!')
     await router.push('/')
   }
 }
